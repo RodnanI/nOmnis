@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Users, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface EmptyStateProps {
@@ -33,7 +33,7 @@ export default function EmptyState({ onNewChat }: EmptyStateProps) {
       <h2 className="text-2xl font-semibold mb-2">Welcome to Chat</h2>
       
       <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8">
-        Start a conversation with friends, create group chats, or join public rooms.
+        Browse registered users or create a public room to start chatting!
       </p>
       
       <motion.button
@@ -42,7 +42,7 @@ export default function EmptyState({ onNewChat }: EmptyStateProps) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        Start a New Conversation
+        Start Chatting
       </motion.button>
       
       <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
@@ -58,30 +58,21 @@ export default function EmptyState({ onNewChat }: EmptyStateProps) {
         
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+            <Users className="h-5 w-5 text-purple-500" />
           </div>
-          <h3 className="font-medium mb-1">Group Chats</h3>
+          <h3 className="font-medium mb-1">User List</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Private conversations with multiple people
+            Browse all registered users
           </p>
         </div>
         
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
+            <Globe className="h-5 w-5 text-green-500" />
           </div>
-          <h3 className="font-medium mb-1">Public Rooms</h3>
+          <h3 className="font-medium mb-1">Public Chat</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Open conversations organized by topics
+            Join the conversation with everyone
           </p>
         </div>
       </div>

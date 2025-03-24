@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import chatSocket from '@/lib/chat/socket';
 import {
@@ -11,6 +11,7 @@ import {
   Message,
   User
 } from '@/app/types/chat';
+import { v4 as uuidv4 } from 'uuid';
 
 // Initial state
 const initialState: ChatState = {
@@ -34,7 +35,7 @@ export const ChatContext = createContext<ChatContextType>({
   setActiveConversation: () => {},
   muteConversation: async () => {},
   leaveConversation: async () => {},
-  searchUsers: async () => [],
+  getAllUsers: async () => [],
   setTypingStatus: () => {}
 });
 
@@ -118,7 +119,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!session?.user?.id) return;
     
     // Generate a temporary ID for optimistic updates
-    const temporaryId = Math.random().toString(36).substring(2, 15);
+    const temporaryId = uuidv4();
     
     try {
       // Optimistic update
@@ -390,20 +391,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  const searchUsers = async (query: string): Promise<User[]> => {
-    if (!session?.user?.id || query.trim().length < 2) return [];
+  const getAllUsers = async (): Promise<User[]> => {
+    if (!session?.user?.id) return [];
     
     try {
-      const response = await fetch(`/api/chat/users/search?q=${encodeURIComponent(query)}`);
+      const response = await fetch('/api/chat/users');
       
       if (!response.ok) {
-        throw new Error('Failed to search users');
+        throw new Error('Failed to get users');
       }
       
       const data = await response.json();
       return data.users || [];
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error('Error getting users:', error);
       return [];
     }
   };
@@ -642,7 +643,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveConversation,
     muteConversation,
     leaveConversation,
-    searchUsers,
+    getAllUsers,
     setTypingStatus
   };
   

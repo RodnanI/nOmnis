@@ -86,6 +86,6 @@ export interface ChatContextType extends ChatState {
   setActiveConversation: (conversationId: string | null) => void;
   muteConversation: (conversationId: string, mute: boolean) => Promise<void>;
   leaveConversation: (conversationId: string) => Promise<void>;
-  searchUsers: (query: string) => Promise<User[]>;
+  getAllUsers: () => Promise<User[]>;
   setTypingStatus: (conversationId: string, isTyping: boolean) => void;
 }

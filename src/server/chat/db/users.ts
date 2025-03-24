@@ -125,32 +125,7 @@ export async function registerUser(userData: {
   };
 }
 
-// Search users
-export async function searchUsers(query: string, currentUserId: string): Promise<User[]> {
-  // Filter users by query
-  return Object.values(users)
-    .filter(user => 
-      // Don't include the current user
-      user.id !== currentUserId && 
-      // Match against name, username, or email
-      (user.name.toLowerCase().includes(query.toLowerCase()) || 
-       user.username.toLowerCase().includes(query.toLowerCase()) || 
-       user.email.toLowerCase().includes(query.toLowerCase()))
-    )
-    .map(userData => ({
-      id: userData.id,
-      username: userData.username,
-      name: userData.name,
-      email: userData.email,
-      avatarUrl: userData.avatarUrl,
-      status: userData.status,
-      lastActive: userData.lastActive.toISOString(),
-      isTypingIn: userData.isTypingIn,
-      typingUpdatedAt: userData.typingUpdatedAt?.toISOString() || null
-    }));
-}
-
-// Get all registered users (for admin purposes)
+// Get all registered users
 export async function getAllUsers(): Promise<User[]> {
   return Object.values(users).map(userData => ({
     id: userData.id,
