@@ -11,6 +11,7 @@ interface MessageComposerProps {
 export default function MessageComposer({ conversationId }: MessageComposerProps) {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const { send, setTyping } = useConversation(conversationId);
@@ -52,14 +53,17 @@ export default function MessageComposer({ conversationId }: MessageComposerProps
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (message.trim()) {
+    if (message.trim() && !isSending) {
       try {
+        setIsSending(true);
         await send(message);
         setMessage('');
         setIsTyping(false);
         setTyping(false);
       } catch (error) {
         console.error('Error sending message:', error);
+      } finally {
+        setIsSending(false);
       }
     }
   };
@@ -98,6 +102,7 @@ export default function MessageComposer({ conversationId }: MessageComposerProps
                 handleSend(e);
               }
             }}
+            disabled={isSending}
           />
         </div>
         
@@ -112,9 +117,9 @@ export default function MessageComposer({ conversationId }: MessageComposerProps
         {/* Send button */}
         <button
           type="submit"
-          disabled={!message.trim()}
+          disabled={!message.trim() || isSending}
           className={`p-2 rounded-full mx-1 mb-1 ${
-            message.trim()
+            message.trim() && !isSending
               ? 'bg-blue-500 text-white'
               : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
           }`}

@@ -1,13 +1,17 @@
-// middleware.ts
+// src/middleware.ts
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-    const session = await getToken({
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET,
-    });
+    // Skip middleware for static files
+    const { pathname } = request.nextUrl;
+    if (
+        pathname.includes('.') || // Static files like .ico, .jpg, etc.
+        pathname.startsWith('/api/socket') // Socket.io endpoint
+    ) {
+        return NextResponse.next();
+    }
 
     // Define which paths need authentication
     const authPaths = ['/preferences', '/statistics', '/projects/file-uploader'];
@@ -17,6 +21,12 @@ export async function middleware(request: NextRequest) {
     const isAuthPath = authPaths.some(authPath =>
         path === authPath || path.startsWith(`${authPath}/`)
     );
+
+    // Get authentication token
+    const session = await getToken({
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET,
+    });
 
     if (isAuthPath && !session) {
         // Redirect unauthenticated users to login
@@ -35,5 +45,11 @@ export async function middleware(request: NextRequest) {
 
 // Specify which paths this middleware should run for
 export const config = {
-    matcher: ['/preferences/:path*', '/statistics/:path*', '/projects/:path*', '/login'],
+    matcher: [
+        '/preferences/:path*', 
+        '/statistics/:path*', 
+        '/projects/:path*', 
+        '/login',
+        '/((?!_next/static|_next/image|favicon.ico).*)',
+    ],
 };

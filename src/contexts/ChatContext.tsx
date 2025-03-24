@@ -24,6 +24,26 @@ const initialState: ChatState = {
   typingUsers: {}
 };
 
+// Mock data for development
+const mockUsers: User[] = [
+  {
+    id: 'user1',
+    username: 'johndoe',
+    name: 'John Doe',
+    email: 'john@example.com',
+    avatarUrl: null,
+    status: 'online'
+  },
+  {
+    id: 'user2',
+    username: 'janedoe',
+    name: 'Jane Doe',
+    email: 'jane@example.com',
+    avatarUrl: null,
+    status: 'offline'
+  }
+];
+
 // Create context
 export const ChatContext = createContext<ChatContextType>({
   ...initialState,
@@ -46,14 +66,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize chat when session is available
   useEffect(() => {
     if (session?.user?.id && status === 'authenticated') {
-      // Initialize socket connection
-      chatSocket.initialize(session.user.id);
+      // Initialize socket connection (disabled for now)
+      // chatSocket.initialize(session.user.id);
       
       // Load conversations
       loadConversations();
       
       return () => {
-        chatSocket.disconnect();
+        // chatSocket.disconnect();
       };
     }
   }, [session, status]);
@@ -63,16 +83,65 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState((prev: ChatState) => ({ ...prev, isLoadingConversations: true }));
     
     try {
-      const response = await fetch('/api/chat/conversations');
-      const data = await response.json();
+      // MOCK: Instead of making a real API call, use mock data
+      // const response = await fetch('/api/chat/conversations');
+      // const data = await response.json();
       
-      if (data.conversations) {
-        setState((prev: ChatState) => ({
-          ...prev,
-          conversations: data.conversations,
-          isLoadingConversations: false
-        }));
-      }
+      // Mock some conversations
+      const mockConversations = [
+        {
+          id: 'conv1',
+          type: 'dm' as ConversationType,
+          name: 'John Doe',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastMessageId: null,
+          avatarUrl: null,
+          participants: [
+            {
+              userId: 'user1',
+              conversationId: 'conv1',
+              joinedAt: new Date().toISOString(),
+              leftAt: null,
+              isActive: true,
+              isMuted: false,
+              lastReadMessageId: null,
+              role: 'member' as const,
+              user: mockUsers[0]
+            }
+          ],
+          lastMessage: null,
+          unreadCount: 0
+        },
+        {
+          id: 'conv2',
+          type: 'public' as ConversationType,
+          name: 'Public Chat',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastMessageId: null,
+          avatarUrl: null,
+          participants: mockUsers.map(user => ({
+            userId: user.id,
+            conversationId: 'conv2',
+            joinedAt: new Date().toISOString(),
+            leftAt: null,
+            isActive: true,
+            isMuted: false,
+            lastReadMessageId: null,
+            role: 'member' as const,
+            user
+          })),
+          lastMessage: null,
+          unreadCount: 0
+        }
+      ];
+      
+      setState((prev: ChatState) => ({
+        ...prev,
+        conversations: mockConversations,
+        isLoadingConversations: false
+      }));
     } catch (error) {
       console.error('Error loading conversations:', error);
       setState((prev: ChatState) => ({ ...prev, isLoadingConversations: false }));
@@ -86,24 +155,73 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name?: string
   ): Promise<string> => {
     try {
-      const response = await fetch('/api/chat/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, participantIds: userIds, name })
-      });
+      // MOCK: Instead of making a real API call, create a conversation locally
+      // const response = await fetch('/api/chat/conversations', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ type, participantIds: userIds, name })
+      // });
       
-      const data = await response.json();
+      // const data = await response.json();
       
-      if (data.conversation) {
-        setState((prev: ChatState) => ({
-          ...prev,
-          conversations: [data.conversation, ...prev.conversations]
-        }));
-        
-        return data.conversation.id;
+      // Create a mock conversation
+      const newConversationId = uuidv4();
+      const newConversation: Conversation = {
+        id: newConversationId,
+        type,
+        name: name || (type === 'dm' ? 'Direct Message' : 'Group Chat'),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastMessageId: null,
+        avatarUrl: null,
+        participants: userIds.map(userId => ({
+          userId,
+          conversationId: newConversationId,
+          joinedAt: new Date().toISOString(),
+          leftAt: null,
+          isActive: true,
+          isMuted: false,
+          lastReadMessageId: null,
+          role: 'member' as const,
+          user: mockUsers.find(u => u.id === userId) || {
+            id: userId,
+            username: 'user',
+            name: 'User',
+            email: 'user@example.com',
+            avatarUrl: null
+          }
+        })),
+        lastMessage: null,
+        unreadCount: 0
+      };
+      
+      // Add the current user as a participant if not already included
+      if (session?.user?.id && !userIds.includes(session.user.id)) {
+        newConversation.participants?.push({
+          userId: session.user.id,
+          conversationId: newConversationId,
+          joinedAt: new Date().toISOString(),
+          leftAt: null,
+          isActive: true,
+          isMuted: false,
+          lastReadMessageId: null,
+          role: 'admin' as const,
+          user: {
+            id: session.user.id,
+            username: session.user.email || '',
+            name: session.user.name || '',
+            email: session.user.email || '',
+            avatarUrl: session.user.image || null
+          }
+        });
       }
       
-      throw new Error('Failed to create conversation');
+      setState((prev: ChatState) => ({
+        ...prev,
+        conversations: [newConversation, ...prev.conversations]
+      }));
+      
+      return newConversationId;
     } catch (error) {
       console.error('Error creating conversation:', error);
       throw error;
@@ -120,6 +238,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Generate a temporary ID for optimistic updates
     const temporaryId = uuidv4();
+    const messageId = uuidv4();
+    const now = new Date().toISOString();
     
     try {
       // Optimistic update
@@ -128,8 +248,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         conversationId,
         senderId: session.user.id,
         content,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
         isEdited: false,
         parentId: parentId || null,
         sender: {
@@ -153,29 +273,51 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }));
       
-      // Send to API
-      const response = await fetch(`/api/chat/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, parentId })
-      });
+      // MOCK: Instead of making a real API call, simulate a successful response
+      // const response = await fetch(`/api/chat/conversations/${conversationId}/messages`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ content, parentId })
+      // });
       
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
+      // Simulate server response delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      const data = await response.json();
+      // Create permanent message
+      const permanentMessage: Message = {
+        ...optimisticMessage,
+        id: messageId
+      };
       
-      // Replace optimistic message with real one
-      setState((prev: ChatState) => ({
-        ...prev,
-        messages: {
+      // Replace optimistic message with permanent one
+      setState((prev: ChatState) => {
+        // Update messages
+        const updatedMessages = {
           ...prev.messages,
           [conversationId]: prev.messages[conversationId].map(msg => 
-            msg.id === temporaryId ? data.message : msg
+            msg.id === temporaryId ? permanentMessage : msg
           )
-        }
-      }));
+        };
+        
+        // Update conversation with last message
+        const updatedConversations = prev.conversations.map(conv => {
+          if (conv.id === conversationId) {
+            return {
+              ...conv,
+              lastMessage: permanentMessage,
+              lastMessageId: messageId,
+              updatedAt: now
+            };
+          }
+          return conv;
+        });
+        
+        return {
+          ...prev,
+          messages: updatedMessages,
+          conversations: updatedConversations
+        };
+      });
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -192,9 +334,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const editMessage = async (messageId: string, newContent: string): Promise<void> => {
     try {
-      await chatSocket.editMessage(messageId, newContent);
+      // MOCK: In a real app we'd call chatSocket.editMessage
+      // await chatSocket.editMessage(messageId, newContent);
       
-      // Update message in state
+      // Update message in state (directly in this mock version)
       setState((prev: ChatState) => {
         const updatedMessages = { ...prev.messages };
         
@@ -228,7 +371,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const markAsRead = async (conversationId: string, messageId: string): Promise<void> => {
     try {
-      await chatSocket.markAsRead(conversationId, messageId);
+      // MOCK: In a real app we'd call chatSocket.markAsRead
+      // await chatSocket.markAsRead(conversationId, messageId);
       
       // Update read status in state
       setState((prev: ChatState) => {
@@ -269,35 +413,59 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Get oldest message ID for pagination
       const messages = state.messages[conversationId] || [];
-      const oldestMessage = messages.length > 0 ? messages[0] : null;
       
-      // Fetch earlier messages
-      const query = oldestMessage ? `?before=${oldestMessage.id}` : '';
-      const response = await fetch(`/api/chat/conversations/${conversationId}/messages${query}`);
+      // MOCK: Instead of fetching from API, generate some mock messages
+      // const query = oldestMessage ? `?before=${oldestMessage.id}` : '';
+      // const response = await fetch(`/api/chat/conversations/${conversationId}/messages${query}`);
       
-      if (!response.ok) {
-        throw new Error('Failed to load messages');
+      // Simulate delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate mock messages (older than existing ones)
+      const oldestDate = messages.length > 0 
+        ? new Date(messages[0].createdAt)
+        : new Date();
+        
+      const mockMessages: Message[] = [];
+      
+      // Create 10 mock messages
+      for (let i = 0; i < 10; i++) {
+        const mockDate = new Date(oldestDate);
+        mockDate.setMinutes(mockDate.getMinutes() - (i + 1) * 5); // 5 minute intervals
+        
+        mockMessages.push({
+          id: uuidv4(),
+          conversationId,
+          senderId: mockUsers[i % 2].id, // Alternate senders
+          content: `This is an older message #${i + 1}`,
+          createdAt: mockDate.toISOString(),
+          updatedAt: mockDate.toISOString(),
+          isEdited: false,
+          parentId: null,
+          sender: mockUsers[i % 2]
+        });
       }
       
-      const data = await response.json();
+      // Sort by date (oldest first)
+      mockMessages.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
       
-      if (data.messages && Array.isArray(data.messages)) {
-        // Update state with new messages
-        setState((prev: ChatState) => ({
-          ...prev,
-          messages: {
-            ...prev.messages,
-            [conversationId]: [
-              ...data.messages,
-              ...(prev.messages[conversationId] || [])
-            ]
-          },
-          isLoadingMessages: {
-            ...prev.isLoadingMessages,
-            [conversationId]: false
-          }
-        }));
-      }
+      // Update state with new messages
+      setState((prev: ChatState) => ({
+        ...prev,
+        messages: {
+          ...prev.messages,
+          [conversationId]: [
+            ...mockMessages,
+            ...(prev.messages[conversationId] || [])
+          ]
+        },
+        isLoadingMessages: {
+          ...prev.isLoadingMessages,
+          [conversationId]: false
+        }
+      }));
     } catch (error) {
       console.error('Error loading more messages:', error);
       
@@ -315,24 +483,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setActiveConversation = useCallback((conversationId: string | null) => {
     setState((prev: ChatState) => ({ ...prev, activeConversationId: conversationId }));
     
-    // If we have a conversation ID, join the socket room
+    // If we have a conversation ID, join the socket room (disabled in mock version)
     if (conversationId) {
-      chatSocket.joinConversation(conversationId);
+      // chatSocket.joinConversation(conversationId);
     }
   }, []);
   
   const muteConversation = async (conversationId: string, mute: boolean): Promise<void> => {
     try {
-      // Call API to mute/unmute
-      const response = await fetch(`/api/chat/conversations/${conversationId}/mute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mute })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update mute status');
-      }
+      // MOCK: In a real app we'd call an API
+      // const response = await fetch(`/api/chat/conversations/${conversationId}/mute`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ mute })
+      // });
       
       // Update state
       setState((prev: ChatState) => {
@@ -367,14 +531,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const leaveConversation = async (conversationId: string): Promise<void> => {
     try {
-      // Call API to leave conversation
-      const response = await fetch(`/api/chat/conversations/${conversationId}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to leave conversation');
-      }
+      // MOCK: In a real app we'd call an API
+      // const response = await fetch(`/api/chat/conversations/${conversationId}`, {
+      //   method: 'DELETE'
+      // });
       
       // Remove from state
       setState((prev: ChatState) => ({
@@ -383,8 +543,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         activeConversationId: prev.activeConversationId === conversationId ? null : prev.activeConversationId
       }));
       
-      // Leave socket room
-      chatSocket.leaveConversation(conversationId);
+      // Leave socket room (disabled in mock version)
+      // chatSocket.leaveConversation(conversationId);
     } catch (error) {
       console.error('Error leaving conversation:', error);
       throw error;
@@ -395,14 +555,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!session?.user?.id) return [];
     
     try {
-      const response = await fetch('/api/chat/users');
+      // MOCK: Return mock users instead of calling API
+      // const response = await fetch('/api/chat/users');
+      // const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error('Failed to get users');
+      // Add the current user to mock users if not already present
+      const currentUser: User = {
+        id: session.user.id,
+        username: session.user.email || '',
+        name: session.user.name || '',
+        email: session.user.email || '',
+        avatarUrl: session.user.image || null,
+        status: 'online'
+      };
+      
+      const allUsers = [...mockUsers];
+      if (!allUsers.some(user => user.id === currentUser.id)) {
+        allUsers.push(currentUser);
       }
       
-      const data = await response.json();
-      return data.users || [];
+      return allUsers.filter(user => user.id !== session.user.id); // Exclude current user
     } catch (error) {
       console.error('Error getting users:', error);
       return [];
@@ -410,40 +582,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const setTypingStatus = (conversationId: string, isTyping: boolean): void => {
-    chatSocket.setTypingStatus(conversationId, isTyping);
-  };
-  
-  // Set up socket event listeners
-  useEffect(() => {
-    if (!chatSocket) return;
+    // MOCK: Disabled in mock version
+    // chatSocket.setTypingStatus(conversationId, isTyping);
     
-    // Handle user status changes
-    const onUserStatus = (data: any) => {
-      const { userId, status } = data;
-      
-      setState((prev: ChatState) => ({
-        ...prev,
-        onlineUsers: {
-          ...prev.onlineUsers,
-          [userId]: status === 'online'
-        }
-      }));
-    };
-    
-    // Handle typing status changes
-    const onUserTyping = (data: any) => {
-      const { userId, conversationId, isTyping } = data;
-      
+    // Update local state to simulate typing
+    if (session?.user?.id) {
       setState((prev: ChatState) => {
         const typingUsers = { ...prev.typingUsers };
         const currentTypingUsers = typingUsers[conversationId] || [];
         
-        if (isTyping && !currentTypingUsers.includes(userId)) {
-          // Add user to typing list
-          typingUsers[conversationId] = [...currentTypingUsers, userId];
-        } else if (!isTyping && currentTypingUsers.includes(userId)) {
-          // Remove user from typing list
-          typingUsers[conversationId] = currentTypingUsers.filter(id => id !== userId);
+        if (isTyping && !currentTypingUsers.includes(session.user.id)) {
+          typingUsers[conversationId] = [...currentTypingUsers, session.user.id];
+        } else if (!isTyping && currentTypingUsers.includes(session.user.id)) {
+          typingUsers[conversationId] = currentTypingUsers.filter(id => id !== session.user.id);
         }
         
         return {
@@ -451,186 +602,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           typingUsers
         };
       });
-    };
-    
-    // Handle new messages
-    const onMessageReceived = (data: any) => {
-      const { message } = data;
-      
-      if (!message || !message.conversationId) return;
-      
-      setState((prev: ChatState) => {
-        // Check if we already have this message (to avoid duplicates)
-        const existingMessages = prev.messages[message.conversationId] || [];
-        const messageExists = existingMessages.some(m => m.id === message.id);
-        
-        if (messageExists) return prev;
-        
-        // Update conversations with last message
-        const updatedConversations: Conversation[] = prev.conversations.map(conv => {
-          if (conv.id === message.conversationId) {
-            // Ensure all required fields for Conversation type
-            const updatedConv: Conversation = {
-              ...conv,
-              lastMessage: {
-                id: message.id,
-                conversationId: message.conversationId,
-                senderId: message.senderId,
-                content: message.content,
-                createdAt: message.createdAt,
-                updatedAt: message.createdAt,
-                isEdited: false,
-                parentId: message.parentId || null,
-                sender: message.sender
-              },
-              lastMessageId: message.id,
-              updatedAt: message.createdAt,
-              // Increment unread count if not the active conversation
-              unreadCount: prev.activeConversationId !== message.conversationId ? 
-                (conv.unreadCount || 0) + 1 : 0
-            };
-            return updatedConv;
-          }
-          return conv;
-        });
-        
-        // Sort conversations to show most recent first
-        updatedConversations.sort((a, b) => {
-          const dateA = new Date(a.updatedAt);
-          const dateB = new Date(b.updatedAt);
-          return dateB.getTime() - dateA.getTime();
-        });
-        
-        return {
-          ...prev,
-          conversations: updatedConversations,
-          messages: {
-            ...prev.messages,
-            [message.conversationId]: [...existingMessages, message]
-          }
-        };
-      });
-    };
-    
-    // Handle message edits
-    const onMessageEdit = (data: any) => {
-      const { messageId, newContent, updatedAt } = data;
-      
-      setState((prev: ChatState) => {
-        const updatedMessages = { ...prev.messages };
-        let updatedConversations = [...prev.conversations];
-        
-        // Find the conversation that contains this message
-        for (const conversationId in updatedMessages) {
-          const index = updatedMessages[conversationId].findIndex(m => m.id === messageId);
-          
-          if (index !== -1) {
-            // Update the message
-            updatedMessages[conversationId] = [...updatedMessages[conversationId]];
-            updatedMessages[conversationId][index] = {
-              ...updatedMessages[conversationId][index],
-              content: newContent,
-              isEdited: true,
-              updatedAt: updatedAt || new Date().toISOString()
-            };
-            
-            // Update last message in conversation if needed
-            updatedConversations = updatedConversations.map(conv => {
-              if (conv.id === conversationId && conv.lastMessageId === messageId) {
-                return {
-                  ...conv,
-                  lastMessage: {
-                    ...conv.lastMessage!,
-                    content: newContent,
-                    isEdited: true,
-                    updatedAt: updatedAt || new Date().toISOString()
-                  }
-                };
-              }
-              return conv;
-            });
-            
-            return {
-              ...prev,
-              conversations: updatedConversations,
-              messages: updatedMessages
-            };
-          }
-        }
-        
-        return prev;
-      });
-    };
-    
-    // Handle read receipts
-    const onMessageRead = (data: any) => {
-      const { userId, messageId, conversationId, readAt } = data;
-      
-      setState((prev: ChatState) => {
-        // If this is our current user reading, update unread count
-        if (session?.user?.id === userId) {
-          const updatedConversations = prev.conversations.map(conv => {
-            if (conv.id === conversationId) {
-              return { ...conv, unreadCount: 0 };
-            }
-            return conv;
-          });
-          
-          return {
-            ...prev,
-            conversations: updatedConversations
-          };
-        }
-        
-        // If someone else is reading our message, update read receipts
-        const conversationMessages = prev.messages[conversationId] || [];
-        const updatedMessages = [...conversationMessages];
-        
-        const messageIndex = updatedMessages.findIndex(m => m.id === messageId);
-        if (messageIndex !== -1) {
-          const message = updatedMessages[messageIndex];
-          const readBy = message.readBy || [];
-          
-          // Check if read receipt already exists
-          const receiptExists = readBy.some(r => r.userId === userId);
-          
-          if (!receiptExists) {
-            // Add new read receipt
-            updatedMessages[messageIndex] = {
-              ...message,
-              readBy: [...readBy, { messageId, userId, readAt }]
-            };
-            
-            return {
-              ...prev,
-              messages: {
-                ...prev.messages,
-                [conversationId]: updatedMessages
-              }
-            };
-          }
-        }
-        
-        return prev;
-      });
-    };
-    
-    // Subscribe to events
-    const unsubscribeUserStatus = chatSocket.on('user:status', onUserStatus);
-    const unsubscribeUserTyping = chatSocket.on('user:typing', onUserTyping);
-    const unsubscribeMessageReceived = chatSocket.on('message:received', onMessageReceived);
-    const unsubscribeMessageEdit = chatSocket.on('message:edit', onMessageEdit);
-    const unsubscribeMessageRead = chatSocket.on('message:read', onMessageRead);
-    
-    // Clean up listeners
-    return () => {
-      unsubscribeUserStatus();
-      unsubscribeUserTyping();
-      unsubscribeMessageReceived();
-      unsubscribeMessageEdit();
-      unsubscribeMessageRead();
-    };
-  }, [session]);
+    }
+  };
   
   // Combine state and methods for context
   const contextValue: ChatContextType = {
