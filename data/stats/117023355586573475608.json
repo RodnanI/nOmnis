@@ -1,0 +1,32 @@
+{
+  "projects": {
+    "File Uploader": {
+      "accessCount": 13,
+      "timeSpent": 21.588366666666666,
+      "lastAccessed": "2025-03-23T20:28:38.616Z"
+    },
+    "Chat Assistant": {
+      "accessCount": 17,
+      "timeSpent": 2.3259666666666665,
+      "lastAccessed": "2025-03-23T18:47:51.766Z"
+    },
+    "Literary Analysis": {
+      "accessCount": 12,
+      "timeSpent": 0.39736666666666665,
+      "lastAccessed": "2025-03-23T20:29:40.615Z"
+    }
+  },
+  "fileUploads": 1,
+  "tasksCompleted": 0,
+  "pagesVisited": {
+    "/": 72,
+    "/statistics": 54,
+    "/preferences": 6,
+    "/projects/file-uploader": 47,
+    "/projects/literary-analysis": 5,
+    "/projects/chat-assistant": 20,
+    "/api/projects/file-uploader/download/b08f8268-a473-4d5a-87c2-4cdcb9f28bed": 16
+  },
+  "totalTimeSpent": 198.36058333333332,
+  "lastUpdated": "2025-03-23T23:34:32.691Z"
+}

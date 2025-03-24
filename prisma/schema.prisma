@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  username      String?   @unique
+  image         String?
+  avatarUrl     String?
+  password      String?
+  role          String?   @default("user")
+  
+  // Chat-specific fields
+  status            String?   @default("offline")
+  lastActive        DateTime?
+  isTypingIn        String?
+  typingUpdatedAt   DateTime?
+
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Chat relationships
+  sentMessages     Message[]       @relation("SentMessages")
+  participations   Participant[]
+  readReceipts     ReadReceipt[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Chat System Models
+
+model Conversation {
+  id            String    @id
+  type          String    // 'dm', 'group', or 'public'
+  name          String?
+  avatarUrl     String?
+  lastMessageId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  
+  // Chat relationships
+  messages      Message[]
+  participants  Participant[]
+  lastMessage   Message?        @relation("LastMessage", fields: [lastMessageId], references: [id], onDelete: SetNull)
+}
+
+model Participant {
+  userId            String
+  conversationId    String
+  role              String    @default("member") // 'member' or 'admin'
+  joinedAt          DateTime  @default(now())
+  leftAt            DateTime?
+  isActive          Boolean   @default(true)
+  isMuted           Boolean   @default(false)
+  lastReadMessageId String?
+  
+  // Relationships
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  lastReadMessage Message?      @relation(fields: [lastReadMessageId], references: [id], onDelete: SetNull)
+  
+  @@id([userId, conversationId])
+}
+
+model Message {
+  id              String    @id
+  conversationId  String
+  senderId        String
+  content         String
+  parentId        String?
+  isEdited        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  
+  // Relationships
+  conversation    Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User            @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  parent          Message?        @relation("ParentChild", fields: [parentId], references: [id], onDelete: SetNull)
+  replies         Message[]       @relation("ParentChild")
+  edits           MessageEdit[]
+  readBy          ReadReceipt[]
+  
+  // Last message in conversation
+  lastMessageFor  Conversation[]  @relation("LastMessage")
+  
+  // Last read message by participants
+  lastReadBy      Participant[]
+}
+
+model MessageEdit {
+  id              String    @id
+  messageId       String
+  previousContent String
+  editedAt        DateTime  @default(now())
+  
+  // Relationships
+  message         Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model ReadReceipt {
+  messageId       String
+  userId          String
+  readAt          DateTime  @default(now())
+  
+  // Relationships
+  message         Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@id([messageId, userId])
+}

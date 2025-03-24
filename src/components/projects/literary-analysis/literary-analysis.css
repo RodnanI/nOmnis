@@ -1,0 +1,48 @@
+/* Override any potential global styles that might conflict */
+.literary-analysis-container {
+    font-family: 'Georgia', serif;
+    line-height: 1.6;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Ensure the content is responsive */
+@media (max-width: 768px) {
+    .literary-analysis-container .container {
+        flex-direction: column;
+    }
+    
+    .literary-analysis-container nav.toc {
+        position: static;
+        width: 100%;
+        flex: 0 0 100%;
+        margin-bottom: 2rem;
+        max-height: none;
+    }
+}
+
+/* Fix accordion initially collapsed state */
+.literary-analysis-container .accordion-content {
+    max-height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.literary-analysis-container .accordion-content.active {
+    max-height: 1000px;
+    padding: 1rem;
+}
+
+/* Fix tab content initially hidden state */
+.literary-analysis-container .tab-content {
+    display: none;
+}
+
+.literary-analysis-container .tab-content.active {
+    display: block;
+}
+
+/* Ensure back to top button doesn't conflict with site navigation */
+.literary-analysis-container .back-to-top {
+    z-index: 40;
+}

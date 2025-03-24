@@ -1,0 +1,230 @@
+/* ChatBot specific styles */
+.markdown-body {
+    background-color: transparent !important;
+    color: inherit !important;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.markdown-body pre {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    overflow-x: auto;
+    position: relative;
+}
+
+.markdown-body code {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0.25rem;
+    padding: 0.2em 0.4em;
+    font-size: 0.875em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.markdown-body pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 0.9em;
+}
+
+/* Ensure the chat interface takes the full height */
+.chat-fullscreen {
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999; /* Make sure it's above everything else */
+}
+
+/* Hide header for chatbot pages */
+body:has(.chat-fullscreen) header {
+    display: none !important;
+}
+
+/* Hide any other global navigation elements */
+body:has(.chat-fullscreen) nav.global-nav,
+body:has(.chat-fullscreen) footer {
+    display: none !important;
+}
+
+/* Message animations */
+@keyframes message-entrance {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.message-bubble {
+    animation: message-entrance 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+/* Sidebar gradient */
+.sidebar-gradient {
+    background: linear-gradient(160deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* Background gradient */
+.bg-theme-gradient {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+}
+
+/* Theme variables for color schemes */
+:root {
+    --theme: #f3f4f6;
+    --theme-secondary: #e5e7eb;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --secondary: #1f2937;
+    --secondary-hover: #374151;
+    --border-color: rgba(100, 116, 139, 0.3);
+}
+
+.dark {
+    --theme: #ffffff;
+    --theme-secondary: #f3f4f6;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --secondary: #1f2937;
+    --secondary-hover: #374151;
+    --border-color: rgba(100, 116, 139, 0.3);
+}
+
+/* Basic text colors */
+.text-theme {
+    color: var(--theme);
+}
+
+.text-theme-secondary {
+    color: var(--theme-secondary);
+}
+
+.text-primary {
+    color: var(--primary);
+}
+
+.bg-primary {
+    background-color: var(--primary);
+}
+
+.bg-primary-hover {
+    background-color: var(--primary-hover);
+}
+
+.bg-secondary {
+    background-color: var(--secondary);
+}
+
+.bg-secondary-hover {
+    background-color: var(--secondary-hover);
+}
+
+.border-theme {
+    border-color: var(--border-color);
+}
+
+/* Token syntax highlighting - basic styling for common token types */
+/* These styles will apply even without language-specific imports */
+code[class*="language-"],
+pre[class*="language-"] {
+    color: #f8f8f2;
+    background: rgba(0, 0, 0, 0.2);
+    text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    direction: ltr;
+    text-align: left;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    line-height: 1.5;
+    tab-size: 4;
+    hyphens: none;
+}
+
+/* Token types */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: #8b949e;
+}
+
+.token.punctuation {
+    color: #c9d1d9;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+    color: #79c0ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+    color: #a5d6ff;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    color: #d2a8ff;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+    color: #ff7b72;
+}
+
+.token.function,
+.token.class-name {
+    color: #d2a8ff;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+    color: #ffa657;
+}
+
+/* Home button styles */
+.home-button {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.home-button:hover {
+    background: rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+}
