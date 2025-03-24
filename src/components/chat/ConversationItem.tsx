@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Conversation } from '@/types/chat';
-import { formatDistanceToNow } from 'date-fns';
+import { Conversation, Participant } from '@/app/types/chat';
+import { formatRelativeTime } from '@/lib/chat/formatters';
 import OnlineIndicator from './OnlineIndicator';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -27,7 +27,7 @@ export default function ConversationItem({
   const getDisplayName = () => {
     if (conversation.type === 'dm' && conversation.participants) {
       // Find the other user in the DM
-      const otherUser = conversation.participants.find(p => p.userId !== currentUserId);
+      const otherUser = conversation.participants.find((p: Participant) => p.userId !== currentUserId);
       return otherUser?.user?.name || 'Unknown User';
     }
     return conversation.name || 'Unnamed Conversation';
@@ -36,7 +36,7 @@ export default function ConversationItem({
   const getAvatarUrl = () => {
     if (conversation.type === 'dm' && conversation.participants) {
       // Find the other user in the DM
-      const otherUser = conversation.participants.find(p => p.userId !== currentUserId);
+      const otherUser = conversation.participants.find((p: Participant) => p.userId !== currentUserId);
       return otherUser?.user?.avatarUrl || null;
     }
     return conversation.avatarUrl;
@@ -54,7 +54,7 @@ export default function ConversationItem({
 
   const getTimeAgo = () => {
     if (!conversation.lastMessage) return '';
-    return formatDistanceToNow(new Date(conversation.lastMessage.createdAt), { addSuffix: true });
+    return formatRelativeTime(conversation.lastMessage.createdAt);
   };
 
   const avatarUrl = getAvatarUrl();
@@ -96,7 +96,7 @@ export default function ConversationItem({
           {/* Online indicator for DMs */}
           {conversation.type === 'dm' && conversation.participants && (
             <OnlineIndicator 
-              userId={conversation.participants.find(p => p.userId !== currentUserId)?.userId || ''}
+              userId={conversation.participants.find((p: Participant) => p.userId !== currentUserId)?.userId || ''}
               className="absolute right-0 bottom-0 border-2 border-white dark:border-gray-800"
             />
           )}

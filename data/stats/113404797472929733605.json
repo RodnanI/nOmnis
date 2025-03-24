@@ -19,11 +19,12 @@
   "fileUploads": 0,
   "tasksCompleted": 0,
   "pagesVisited": {
-    "/": 3,
+    "/": 4,
     "/statistics": 1,
     "/projects/file-uploader": 7,
-    "/api/projects/file-uploader/download/b08f8268-a473-4d5a-87c2-4cdcb9f28bed": 2
+    "/api/projects/file-uploader/download/b08f8268-a473-4d5a-87c2-4cdcb9f28bed": 2,
+    "/chat": 7
   },
-  "totalTimeSpent": 2.8064166666666663,
-  "lastUpdated": "2025-03-23T18:51:47.600Z"
+  "totalTimeSpent": 8.221516666666666,
+  "lastUpdated": "2025-03-24T01:04:30.381Z"
 }

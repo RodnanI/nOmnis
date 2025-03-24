@@ -1,6 +1,6 @@
 // src/lib/chat/socket.ts
 import { io, Socket } from 'socket.io-client';
-import { Message, User } from '@/types/chat';
+import { Message, User } from '@/app/types/chat';
 
 class ChatSocketService {
   private socket: Socket | null = null;
@@ -33,37 +33,37 @@ class ChatSocketService {
       this.emit('event', 'disconnect');
     });
 
-    this.socket.on('error', (error) => {
+    this.socket.on('error', (error: any) => {
       console.error('Socket error:', error);
       this.emit('event', 'error', error);
     });
 
     // Chat-specific events
-    this.socket.on('user:status', (data) => {
+    this.socket.on('user:status', (data: any) => {
       this.emit('event', 'user:status', data);
     });
 
-    this.socket.on('user:typing', (data) => {
+    this.socket.on('user:typing', (data: any) => {
       this.emit('event', 'user:typing', data);
     });
 
-    this.socket.on('message:received', (data) => {
+    this.socket.on('message:received', (data: any) => {
       this.emit('event', 'message:received', data);
     });
 
-    this.socket.on('message:edit', (data) => {
+    this.socket.on('message:edit', (data: any) => {
       this.emit('event', 'message:edit', data);
     });
 
-    this.socket.on('message:read', (data) => {
+    this.socket.on('message:read', (data: any) => {
       this.emit('event', 'message:read', data);
     });
 
-    this.socket.on('conversation:created', (data) => {
+    this.socket.on('conversation:created', (data: any) => {
       this.emit('event', 'conversation:created', data);
     });
 
-    this.socket.on('conversation:updated', (data) => {
+    this.socket.on('conversation:updated', (data: any) => {
       this.emit('event', 'conversation:updated', data);
     });
   }
@@ -86,7 +86,7 @@ class ChatSocketService {
   }
 
   sendMessage(conversationId: string, content: string, temporaryId: string, parentId?: string): Promise<Message> {
-    return new Promise((resolve, reject) => {
+    return new Promise<Message>((resolve, reject) => {
       if (!this.socket) {
         reject(new Error('Socket not connected'));
         return;
@@ -107,7 +107,7 @@ class ChatSocketService {
   }
 
   editMessage(messageId: string, newContent: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       if (!this.socket) {
         reject(new Error('Socket not connected'));
         return;

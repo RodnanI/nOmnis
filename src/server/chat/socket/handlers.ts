@@ -7,7 +7,7 @@ import {
   getMessage,
   recordMessageEdit
 } from '../db/messages';
-import { markMessagesAsRead } from '../db/readReceipts';
+import { markMessagesAsRead } from '../db/readReceipt';
 import { getConversationParticipants } from '../db/conversations';
 import { updateTypingStatus } from '../db/users';
 

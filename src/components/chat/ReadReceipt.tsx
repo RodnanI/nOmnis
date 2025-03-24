@@ -3,6 +3,7 @@
 import React from 'react';
 import { useConversation } from '@/hooks/useChat';
 import { Check } from 'lucide-react';
+import { Message, ReadReceipt as ReadReceiptType, Participant } from '@/app/types/chat';
 
 interface ReadReceiptProps {
   messageId: string;
@@ -13,15 +14,29 @@ export default function ReadReceipt({ messageId, conversationId }: ReadReceiptPr
   const { messages, conversation } = useConversation(conversationId);
   
   // Find the message
-  const message = messages.find(m => m.id === messageId);
+  const message = messages.find((m: Message) => m.id === messageId);
   
+  // Early return if message or conversation isn't available
   if (!message || !conversation || !conversation.participants) {
     return null;
   }
   
+  // Ensure message has senderId
+  const senderId = message.senderId;
+  if (!senderId) {
+    return <Check className="h-3 w-3 ml-1 text-gray-400" />;
+  }
+  
+  // Ensure readBy exists and is an array
+  const readBy = Array.isArray(message.readBy) ? message.readBy : [];
+  
   // Count the number of readers (excluding the sender)
-  const readCount = message.readBy?.filter(r => r.userId !== message.senderId)?.length || 0;
-  const participantCount = conversation.participants.filter(p => p.userId !== message.senderId).length;
+  const readCount = readBy.filter((r: ReadReceiptType) => r && r.userId !== senderId).length;
+  
+  // Count participants (excluding the sender)
+  const participantCount = conversation.participants
+    .filter((p: Participant) => p && typeof p.userId === 'string' && p.userId !== senderId)
+    .length;
   
   // If no one has read the message yet
   if (readCount === 0) {

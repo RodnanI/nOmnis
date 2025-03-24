@@ -1,48 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User } from '@/types/chat';
-import { useChat } from '@/hooks/useChat';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import OnlineIndicator from './OnlineIndicator';
+import { UserPlus } from 'lucide-react';
 
 interface UserSearchProps {
   query: string;
-  onSelectUser: (user: User) => void;
+  onSelectUser: (user: any) => void;
+  results: any[];
+  isLoading: boolean;
 }
 
-export default function UserSearch({ query, onSelectUser }: UserSearchProps) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const { searchUsers } = useChat();
-  
-  useEffect(() => {
-    const searchTimeout = setTimeout(async () => {
-      if (query.trim().length < 2) {
-        setUsers([]);
-        return;
-      }
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const results = await searchUsers(query);
-        setUsers(results);
-      } catch (err) {
-        console.error('Error searching users:', err);
-        setError('Failed to search users');
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300); // Add debounce
-    
-    return () => clearTimeout(searchTimeout);
-  }, [query, searchUsers]);
-  
+export default function UserSearch({ query, onSelectUser, results, isLoading }: UserSearchProps) {
   if (isLoading) {
     return (
       <div className="p-4 space-y-3">
@@ -55,15 +26,7 @@ export default function UserSearch({ query, onSelectUser }: UserSearchProps) {
     );
   }
   
-  if (error) {
-    return (
-      <div className="p-4 text-center text-red-500 dark:text-red-400">
-        <p>{error}</p>
-      </div>
-    );
-  }
-  
-  if (users.length === 0) {
+  if (results.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         {query.trim().length < 2 ? (
@@ -87,7 +50,7 @@ export default function UserSearch({ query, onSelectUser }: UserSearchProps) {
         transition={{ staggerChildren: 0.05 }}
         className="space-y-1"
       >
-        {users.map((user) => (
+        {results.map((user) => (
           <motion.div
             key={user.id}
             whileHover={{ scale: 1.01 }}
@@ -102,14 +65,14 @@ export default function UserSearch({ query, onSelectUser }: UserSearchProps) {
                   {user.avatarUrl ? (
                     <Image
                       src={user.avatarUrl}
-                      alt={user.name}
+                      alt={user.name || ''}
                       width={40}
                       height={40}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-                      {user.name.charAt(0).toUpperCase()}
+                      {user.name ? user.name.charAt(0).toUpperCase() : '?'}
                     </div>
                   )}
                 </div>
@@ -123,12 +86,17 @@ export default function UserSearch({ query, onSelectUser }: UserSearchProps) {
               {/* User Info */}
               <div className="ml-3 flex-grow min-w-0">
                 <h4 className="font-medium">
-                  {user.name}
+                  {user.name || 'Unknown User'}
                 </h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  {user.username || user.email}
+                  {user.username || user.email || ''}
                 </p>
               </div>
+              
+              {/* Add button */}
+              <button className="ml-auto text-blue-500 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full">
+                <UserPlus className="h-4 w-4" />
+              </button>
             </div>
           </motion.div>
         ))}

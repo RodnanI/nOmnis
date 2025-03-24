@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getConversationParticipants } from '@/server/chat/db/conversations';
-import { markMessagesAsRead } from '@/server/chat/db/readReceipts';
+import { markMessagesAsRead } from '@/server/chat/db/readReceipt';
 
 // POST /api/chat/conversations/[id]/read
 export async function POST(

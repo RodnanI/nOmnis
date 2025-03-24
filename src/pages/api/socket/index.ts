@@ -2,7 +2,6 @@
 import { Server as HttpServer } from 'http';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Server as SocketIOServer } from 'socket.io';
-import { getToken } from 'next-auth/jwt';
 import { initSocketServer } from '@/server/chat/socket/server';
 
 // Global SocketIO instance
@@ -20,7 +19,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
+  // Handle preflight requests
+  if (req.method && req.method.toUpperCase() === 'OPTIONS') {
     res.status(200).end();
     return;
   }
