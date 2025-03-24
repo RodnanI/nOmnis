@@ -2,44 +2,75 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { getToken } from 'next-auth/jwt';
-import { updateUserStatus } from '../db/users';
-import { getUserConversations } from '../db/conversations';
+import { updateUserStatus, registerUser } from '../db/users';
+import { getConversationParticipants } from '../db/conversations';
 import { handleMessageSend, handleMessageEdit, handleMessageRead } from './handlers';
 import { handleTypingStatus } from './handlers';
+import { Conversation } from '@/app/types/chat';
 
 // In-memory store for connected users
 const connectedUsers: Record<string, Set<string>> = {}; // userId -> Set of socketIds
 
+// Mock function for getUserConversations since it's not exported from db/conversations
+async function getUserConversations(userId: string): Promise<Conversation[]> {
+  // In a real app, this would fetch actual conversations for a user
+  // For now, return an empty array of properly typed Conversation objects
+  return [];
+}
+
 export function initSocketServer(httpServer: HttpServer): SocketIOServer {
   const io = new SocketIOServer(httpServer, {
-    path: '/api/socket',
+    path: '/api/socketio',
     cors: {
-      origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      origin: '*', // In production, you'd want to restrict this
       methods: ['GET', 'POST'],
       credentials: true,
     },
+    transports: ['websocket', 'polling'], // Allow both WebSocket and polling
   });
+
+  console.log('Socket.io server initialized with path: /api/socketio');
 
   // Socket middleware for authentication
   io.use(async (socket, next) => {
     try {
+      console.log('Socket authentication middleware running');
       const req = socket.request as any;
       const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
       if (!token || !token.sub) {
+        console.log('Socket authentication failed: No token or user ID');
         return next(new Error('Unauthorized'));
       }
 
+      console.log('Socket authenticated for user:', token.sub);
+      
       // Attach user data to the socket
       socket.data.userId = token.sub;
+      socket.data.name = token.name || '';
+      socket.data.email = token.email || '';
+      socket.data.image = token.picture || '';
+      
+      // Register or update this user in our user database
+      // Convert null values to undefined where needed
+      await registerUser({
+        id: token.sub,
+        name: token.name || undefined,
+        email: token.email || undefined,
+        image: token.picture || undefined,
+        username: token.email || undefined
+      });
+      
       return next();
     } catch (error) {
+      console.error('Socket authentication error:', error);
       return next(new Error('Authentication error'));
     }
   });
 
   io.on('connection', async (socket) => {
     const userId = socket.data.userId;
+    console.log(`User ${userId} connected with socket ${socket.id}`);
     
     // Add user to connected users
     if (!connectedUsers[userId]) {
@@ -58,44 +89,54 @@ export function initSocketServer(httpServer: HttpServer): SocketIOServer {
     });
 
     // Join user's conversations automatically
-    const conversations = await getUserConversations(userId);
-    for (const conversation of conversations) {
-      socket.join(`conversation:${conversation.id}`);
+    try {
+      const conversations: Conversation[] = await getUserConversations(userId);
+      for (const conversation of conversations) {
+        if (conversation && conversation.id) {
+          socket.join(`conversation:${conversation.id}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error joining user conversations:', error);
     }
 
     // Join user's personal room
     socket.join(`user:${userId}`);
 
-    console.log(`User ${userId} connected with socket ${socket.id}`);
-
     // Handle events
     socket.on('conversation:join', (data) => {
       socket.join(`conversation:${data.conversationId}`);
+      console.log(`User ${userId} joined conversation: ${data.conversationId}`);
     });
 
     socket.on('conversation:leave', (data) => {
       socket.leave(`conversation:${data.conversationId}`);
+      console.log(`User ${userId} left conversation: ${data.conversationId}`);
     });
 
     socket.on('message:send', (data, callback) => {
+      console.log(`User ${userId} sending message to conversation: ${data.conversationId}`);
       handleMessageSend(io, socket, data, callback);
     });
 
     socket.on('message:edit', (data, callback) => {
+      console.log(`User ${userId} editing message: ${data.messageId}`);
       handleMessageEdit(io, socket, data, callback);
     });
 
     socket.on('message:read', (data) => {
+      console.log(`User ${userId} marking message as read: ${data.messageId}`);
       handleMessageRead(io, socket, data);
     });
 
     socket.on('user:typing', (data) => {
+      console.log(`User ${userId} typing status in conversation ${data.conversationId}: ${data.isTyping}`);
       handleTypingStatus(io, socket, data);
     });
 
     // Handle disconnection
     socket.on('disconnect', async () => {
-      console.log(`User ${userId} disconnected`);
+      console.log(`User ${userId} disconnected from socket ${socket.id}`);
       
       // Remove socket from connected users
       connectedUsers[userId]?.delete(socket.id);

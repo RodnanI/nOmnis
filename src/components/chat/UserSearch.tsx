@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import OnlineIndicator from './OnlineIndicator';
 import { UserPlus } from 'lucide-react';
+import { User } from '@/app/types/chat';
 
 interface UserSearchProps {
   query: string;
-  onSelectUser: (user: any) => void;
-  results: any[];
+  onSelectUser: (user: User) => void;
+  results: User[];
   isLoading: boolean;
 }
 
@@ -19,7 +20,13 @@ export default function UserSearch({ query, onSelectUser, results, isLoading }: 
       <div className="p-4 space-y-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className="animate-pulse">
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+              <div className="ml-3 flex-1">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -32,7 +39,7 @@ export default function UserSearch({ query, onSelectUser, results, isLoading }: 
         {query.trim().length < 2 ? (
           <p>Enter at least 2 characters to search</p>
         ) : (
-          <p>No users found</p>
+          <p>No users found matching "{query}"</p>
         )}
       </div>
     );
@@ -41,7 +48,7 @@ export default function UserSearch({ query, onSelectUser, results, isLoading }: 
   return (
     <div className="p-2">
       <h3 className="px-2 py-1 text-sm text-gray-500 dark:text-gray-400">
-        Search Results
+        Search Results ({results.length})
       </h3>
       
       <motion.div
@@ -94,7 +101,13 @@ export default function UserSearch({ query, onSelectUser, results, isLoading }: 
               </div>
               
               {/* Add button */}
-              <button className="ml-auto text-blue-500 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full">
+              <button 
+                className="ml-auto text-blue-500 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectUser(user);
+                }}
+              >
                 <UserPlus className="h-4 w-4" />
               </button>
             </div>

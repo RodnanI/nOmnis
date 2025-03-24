@@ -5,6 +5,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { v4 as uuidv4 } from 'uuid';
 import { getConversationParticipants } from '@/server/chat/db/conversations';
 import { getConversationMessages, saveMessage } from '@/server/chat/db/messages';
+import { getUser } from '@/server/chat/db/users';
 
 // GET /api/chat/conversations/[id]/messages
 export async function GET(
@@ -42,8 +43,19 @@ export async function GET(
     // Get messages
     const messages = await getConversationMessages(conversationId, limit, before, after);
 
+    // Add sender info to each message
+    const messagesWithSenders = await Promise.all(
+      messages.map(async (message) => {
+        const sender = await getUser(message.senderId);
+        return {
+          ...message,
+          sender: sender || undefined
+        };
+      })
+    );
+
     return NextResponse.json({ 
-      messages,
+      messages: messagesWithSenders,
       hasMore: messages.length >= limit
     });
   } catch (error) {
@@ -111,15 +123,13 @@ export async function POST(
 
     await saveMessage(message);
 
+    // Get the sender info
+    const sender = await getUser(session.user.id);
+
     // Add sender info for the response
     const messageWithSender = {
       ...message,
-      sender: {
-        id: session.user.id,
-        username: session.user.name,
-        name: session.user.name,
-        avatarUrl: session.user.image
-      }
+      sender: sender || undefined
     };
 
     return NextResponse.json({ message: messageWithSender });

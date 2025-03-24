@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { User, ConversationType } from '@/types/chat';
+import React, { useState, useEffect } from 'react';
+import { User, ConversationType } from '@/app/types/chat';
 import { motion } from 'framer-motion';
 import { X, Users, MessageCircle, Globe, Search, Plus, UserPlus } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
@@ -29,8 +29,18 @@ export default function NewConversation({
   
   const { searchUsers, createConversation } = useChat();
   
+  // When initialUsers changes, update selectedUsers
+  useEffect(() => {
+    if (initialUsers.length > 0) {
+      setSelectedUsers(initialUsers);
+    }
+  }, [initialUsers]);
+  
   const handleSearch = async () => {
-    if (searchQuery.trim().length < 2) return;
+    if (searchQuery.trim().length < 2) {
+      setError('Please enter at least 2 characters to search');
+      return;
+    }
     
     setIsSearching(true);
     setError(null);
@@ -172,7 +182,7 @@ export default function NewConversation({
         )}
         
         {/* Selected Users */}
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 overflow-y-auto">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {conversationType === 'dm' ? 'Select User' : 'Add Participants'}
@@ -217,6 +227,7 @@ export default function NewConversation({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault();
                       handleSearch();
                     }
                   }}
@@ -232,7 +243,14 @@ export default function NewConversation({
               </div>
               
               {/* Search Results */}
-              {searchResults.length > 0 && (
+              {isSearching && (
+                <div className="mt-2 text-center py-2">
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
+                  <p className="text-sm text-gray-500 mt-1">Searching...</p>
+                </div>
+              )}
+              
+              {!isSearching && searchResults.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 max-h-48 overflow-y-auto">
                   {searchResults.map(user => (
                     <div
@@ -267,9 +285,9 @@ export default function NewConversation({
                 </div>
               )}
               
-              {isSearching && (
-                <div className="text-center py-2 text-sm text-gray-500">
-                  Searching...
+              {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                <div className="mt-2 text-center py-2 text-sm text-gray-500">
+                  No users found matching "{searchQuery}"
                 </div>
               )}
             </div>

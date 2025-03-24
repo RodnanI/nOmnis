@@ -6,6 +6,7 @@ import ProjectLayoutWrapper from '@/components/layout/ProjectLayoutWrapper';
 import AuthProvider from '@/components/auth/SessionProvider';
 import StatisticsTracker from '@/components/statistics/StatisticsTracker';
 import ChatIntegration from '@/components/projects/ChatIntegration';
+import ChatSocketSetup from '@/components/chat/ChatSocketSetup';
 import 'github-markdown-css/github-markdown.css';
 import 'prismjs/themes/prism-tomorrow.css';
 
@@ -31,6 +32,7 @@ export default function RootLayout({
                 </ProjectLayoutWrapper>
                 <StatisticsTracker />
                 <ChatIntegration />
+                <ChatSocketSetup />
             </ThemeProvider>
         </AuthProvider>
         </body>

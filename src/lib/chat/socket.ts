@@ -6,26 +6,39 @@ class ChatSocketService {
   private socket: Socket | null = null;
   private userId: string | null = null;
   private eventHandlers: Record<string, Function[]> = {};
+  private connectionAttempts = 0;
+  private maxConnectionAttempts = 5;
 
   initialize(userId: string): void {
     if (this.socket || !userId) return;
 
     this.userId = userId;
+    console.log('Initializing socket connection for user:', userId);
     
-    // Connect to WebSocket server
-    this.socket = io(window.location.origin, {
-      path: '/api/socket',
-      auth: {
-        userId,
-      },
+    // Connect to WebSocket server - use the correct path that matches our API setup
+    this.socket = io({
+      path: '/api/socketio',
+      reconnectionDelayMax: 10000,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: this.maxConnectionAttempts,
+      transports: ['websocket', 'polling'] // Allow fallback to polling if needed
     });
 
     // Set up default event listeners
     this.socket.on('connect', () => {
       console.log('Connected to chat server');
+      this.connectionAttempts = 0;
       this.emit('event', 'connect');
+    });
+
+    this.socket.on('connect_error', (error) => {
+      this.connectionAttempts++;
+      console.error(`Socket connection error (attempt ${this.connectionAttempts}/${this.maxConnectionAttempts}):`, error);
+      
+      // If we've reached max attempts, emit an error event
+      if (this.connectionAttempts >= this.maxConnectionAttempts) {
+        this.emit('event', 'connection_failed', error);
+      }
     });
 
     this.socket.on('disconnect', () => {

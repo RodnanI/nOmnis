@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getUserConversations, createConversation } from '@/server/chat/db/conversations';
-import { ConversationType } from '@/types/chat';
+import { ConversationType } from '@/app/types/chat';
 
 // GET /api/chat/conversations
 export async function GET(request: NextRequest) {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For direct messages, handle special validation and creation
+    // For direct messages, handle special validation
     if (type === 'dm') {
       if (participantIds.length !== 1) {
         return NextResponse.json(
@@ -79,19 +79,6 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      const otherUserId = participantIds[0];
-      
-      // Create DM conversation
-      const conversation = await createConversation(
-        'dm',
-        session.user.id,
-        [otherUserId],
-        null,
-        null
-      );
-
-      return NextResponse.json({ conversation });
     } else {
       // For group or public, name is required
       if (!name) {
@@ -100,18 +87,18 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      // Create group or public conversation
-      const conversation = await createConversation(
-        type as ConversationType,
-        session.user.id,
-        participantIds,
-        name,
-        avatarUrl
-      );
-
-      return NextResponse.json({ conversation });
     }
+
+    // Create the conversation
+    const conversation = await createConversation(
+      type as ConversationType,
+      session.user.id,
+      participantIds,
+      name || null,
+      avatarUrl || null
+    );
+
+    return NextResponse.json({ conversation });
   } catch (error) {
     console.error('Error in POST /api/chat/conversations:', error);
     return NextResponse.json(

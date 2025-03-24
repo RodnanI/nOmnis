@@ -44,6 +44,7 @@ export default function ChatSidebar({ onSelectConversation }: ChatSidebarProps) 
       setSearchResults(results);
     } catch (err) {
       console.error('Error searching users:', err);
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -127,39 +128,12 @@ export default function ChatSidebar({ onSelectConversation }: ChatSidebarProps) 
       {/* Conversation List or Search Results */}
       <div className="flex-1 overflow-y-auto">
         {searchActive && searchQuery.trim().length >= 2 ? (
-          isSearching ? (
-            <div className="p-4 text-center text-gray-500">
-              <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent mx-auto mb-2"></div>
-              <p>Searching...</p>
-            </div>
-          ) : searchResults.length > 0 ? (
-            <div className="p-2">
-              <h3 className="px-2 py-1 text-sm text-gray-500 dark:text-gray-400">
-                Search Results
-              </h3>
-              {searchResults.map((user) => (
-                <div 
-                  key={user.id}
-                  className="p-3 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
-                  onClick={() => handleSelectUser(user)}
-                >
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300">
-                      {user.name && user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="ml-3">
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-gray-500">{user.email || user.username}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-4 text-center text-gray-500">
-              <p>No users found</p>
-            </div>
-          )
+          <UserSearch 
+            query={searchQuery}
+            onSelectUser={handleSelectUser}
+            results={searchResults}
+            isLoading={isSearching}
+          />
         ) : (
           <ConversationList 
             conversations={conversations}
